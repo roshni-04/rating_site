@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
 
-
-
 <head>
     <script src="assets/js/color-modes.js"></script>
 
@@ -16,11 +14,10 @@
 
     <link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="headers.css" rel="stylesheet">
+    <!-- <link href="headers.css" rel="stylesheet"> -->
 
     <!-- Add icon library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
 
     <style>
     body {
@@ -45,36 +42,55 @@ if(!isset($_SESSION['user_name'])){
 
     <?php
 
-    include 'controllers/pg_connect.php';
+    $pdo = require_once 'pdo/PDOConnection.php';
 
     // Check if item_id is set in the URL
     $item_id = isset($_GET['id']) ? $_GET['id'] : 0;
     $rating_id = isset($_GET['id']) ? $_GET['id'] : 0;
 
     // Fetch item details for the given item_id
-    $sql = "SELECT * FROM items WHERE item_id = " . $item_id;
+    $isql = "SELECT * FROM items WHERE item_id = :item_id";
+    $st = $pdo->prepare($isql);      // for select all
+    $st->bindParam(':item_id', $item_id, PDO::PARAM_INT); 
+    $st->execute();
+    $item = $st->fetch(PDO::FETCH_ASSOC);  // returns an array of rows
+    
+    //$item = $result[0];
+
+    /*$sql = "SELECT * FROM items WHERE item_id = " . $item_id;
     $result = pg_query($pg_conn, $sql);
-    $item = pg_fetch_object($result);
+    $item = pg_fetch_object($result);*/
 
 
     // ------ find the category dropdown -------------
     $sql = "SELECT * FROM mas_category order by cat_name";
-    $res =  pg_query($pg_conn, $sql);
+    $stmnt = $pdo->query($sql);         // for select all
+    $res = $stmnt->fetchall(PDO::FETCH_ASSOC); // returns an array of rows
+    /*$sql = "SELECT * FROM mas_category order by cat_name";
+    $res =  pg_query($pg_conn, $sql);*/
     
     $slist = "";
     
-    while( $row = pg_fetch_object($res) ){ // the loop continues untill the data pointer reaches NULL
-        if($row->cat_id == $item->item_cat){
-            $slist = $slist."<option value=".$row->cat_id." selected>".$row->cat_name."</option>";
+    foreach ($res as $row){
+    //while( $row = pg_fetch_object($res) ){ // the loop continues untill the data pointer reaches NULL
+        if($row['cat_id'] == $item['item_cat']){
+            $slist = $slist."<option value=".$row['cat_id']." selected>".$row['cat_name']."</option>";
         } else {
-            $slist = $slist."<option value=".$row->cat_id.">".$row->cat_name."</option>";
+            $slist = $slist."<option value=" . $row['cat_id'] .">" . $row['cat_name'] . "</option>";
         }
         
     }
 
 
-    $sql2= "SELECT * FROM ratings WHERE item_id = " . $item_id;
-    $result2 = pg_query($pg_conn, $sql2);
+    $rsql = "SELECT * FROM ratings WHERE item_id = :item_id";
+    $stm = $pdo->prepare($rsql);      // for select all
+    $stm->bindParam(':item_id', $item_id, PDO::PARAM_INT); 
+    $stm->execute();
+    $result2 = $stm->fetchall(PDO::FETCH_ASSOC); 
+
+
+    /* $sql2= "SELECT * FROM ratings WHERE item_id = " . $item_id;
+    $result2 = pg_query($pg_conn, $sql2);*/
     // xxxxxxxx $ratings = pg_fetch_object($result2);
     
     ?>
@@ -85,19 +101,19 @@ if(!isset($_SESSION['user_name'])){
             <h2 class="pb-2 border-bottom">Edit Item</h2>
             <form action="saveedititems.php" method="post" enctype="multipart/form-data">
                 <!-- Add hidden input for item_id -->
-                <input type="hidden" name="hdn_item_id" id="hdn_item_id" value="<?php echo $item->item_id; ?>">
+                <input type="hidden" name="hdn_item_id" id="hdn_item_id" value="<?php echo $item['item_id']; ?>">
                 <!-- <input type="hidden" name="rating_id" value="<?php //echo $ratings->rating_id; ?>"> -->
                 <!-- Add your form fields for editing item details -->
                 <div class="input-group mb-3">
                     <!-- <label for="txtname" class="form-label">Item Name</label> -->
                     <span class="input-group-text" id="p_name-addon">Product Name</span>
-                    <input type="text" class="form-control" id="txtname" name="txtname" value="<?php echo $item->item_name; ?>">
+                    <input type="text" class="form-control" id="txtname" name="txtname" value="<?php echo $item['item_name']; ?>">
                 </div>
 
                 <div class="input-group mb-3">
                     <!-- <label for="txtname" class="form-label">Item description</label> -->
                     <span class="input-group-text" id="p_name-addon">Description</span>
-                    <textarea class="form-control" id="txtdesc" name="txtdesc" rows="4" cols="50"><?php echo $item->item_desc; ?></textarea>
+                    <textarea class="form-control" id="txtdesc" name="txtdesc" rows="4" cols="50"><?php echo $item['item_desc']; ?></textarea>
                 </div>
 
                 <div class="input-group mb-3">
@@ -109,36 +125,39 @@ if(!isset($_SESSION['user_name'])){
 
                     <?php 
                         $i = 1;
-                        while( $row = pg_fetch_object($result2) ){
+                        //while( $row = pg_fetch_object($result2) ){
+                        foreach ($result2 as $row){
+                            
                     ?>
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="p_name-addon">Site &nbsp; <i class="fa fa-globe"></i></span>
                     <input type="text" class="form-control" id="txtsite_<?php echo $i; ?>" 
-                        name="txtsite_<?php echo $i; ?>" value="<?php echo $row->site_name; ?>">
+                        name="txtsite_<?php echo $i; ?>"
+                         value="<?php echo $row['site_name']; ?>">
                 </div>
 
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="p_name-addon">Rating &nbsp; <i class="fa fa-star"></i></span>
                     <input type="text" class="form-control" id="txtrate_<?php echo $i; ?>"
-                        name="txtrate_<?php echo $i; ?>" value="<?php echo $row->rating_value; ?>">
+                        name="txtrate_<?php echo $i; ?>" value="<?php echo $row['rating_value']; ?>">
                 </div>
 
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="p_name-addon">Price &nbsp; <i class="fa fa-rupee"></i></span>
                     <input type="text" class="form-control" id="txtprice_<?php echo $i; ?>"
-                        name="txtprice_<?php echo $i; ?>" value="<?php echo $row->price; ?>">
+                        name="txtprice_<?php echo $i; ?>" value="<?php echo $row['price']; ?>">
                 </div>
 
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="p_name-addon">Sales &nbsp; <i class="fa fa-line-chart"></i></span>
                     <input type="text" class="form-control" id="txtsales_<?php echo $i; ?>"
-                        name="txtsales_<?php echo $i; ?>" value="<?php echo $row->sales; ?>">
+                        name="txtsales_<?php echo $i; ?>" value="<?php echo $row['sales']; ?>">
                 </div>
 
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="p_name-addon">URL &nbsp; <i class="fa fa-link"></i></span>
                     <input type="text" class="form-control" id="txturl_<?php echo $i; ?>"
-                        name="txturl_<?php echo $i; ?>" value="<?php echo $row->url; ?>">
+                        name="txturl_<?php echo $i; ?>" value="<?php echo $row['url']; ?>">
                 </div>
 
 
@@ -181,7 +200,7 @@ if(!isset($_SESSION['user_name'])){
                         <!-- <div class="col-sm-10"> -->
                             <input type="file" name="file-image" id="file-image" accept=".jpg,.jpeg,.png,.gif">
                         <!-- </div> -->
-                        <input type="hidden" name="hdnimg" id="hdnimg" value="<?php echo $item->item_img; ?>"
+                        <input type="hidden" name="hdnimg" id="hdnimg" value="<?php echo $item['item_img']; ?>">
                 </div>
 
 
@@ -193,12 +212,17 @@ if(!isset($_SESSION['user_name'])){
     </main>
 
     <?php
+    $result = NULL;
+    $pdo = NULL;
+    $item = NULL;
+    /*
      if($result  != NULL){
         pg_free_result($result);// free the result set
      }
      if($pg_conn  != NULL){
        pg_close($pg_conn);//closing the connection 
      }
+       */
 
     ?>
 

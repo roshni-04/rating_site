@@ -15,6 +15,12 @@ alter table items add column tot_sales integer DEFAULT 0;
 select * from items;
 select * from ratings where item_id = 51;
 
+CREATE TABLE mas_user(
+uname varchar(20) NOT NULL,
+upass varchar(20),
+access_lvl int,
+uid SERIAL
+);
 
 CREATE TABLE customers
 (
@@ -45,14 +51,14 @@ CREATE TABLE mas_category
   CONSTRAINT mas_category_pkey PRIMARY KEY (cat_id)
 );
 
-CREATE TABLE mas_user
-(
-  uname varchar(20) NOT NULL,
-  upass varchar(20),
-  access_lvl integer,
-  uid integer,
-  CONSTRAINT user_pkey PRIMARY KEY (uname)
-);
+
+
+INSERT INTO mas_user(uname, upass, access_lvl) VALUES('admin', '123', 1);
+
+delete from employee;
+
+delete from customers;
+DROP table mas_user;
 
 CREATE TABLE ratings
 (
@@ -140,7 +146,7 @@ INSERT INTO items (item_id, item_name, item_desc, item_cat, item_img, avg_rating
 INSERT INTO items (item_id, item_name, item_desc, item_cat, item_img, avg_rating) VALUES (49, 'abc', 'def', 2, NULL, 0.0);
 INSERT INTO items (item_id, item_name, item_desc, item_cat, item_img, avg_rating) VALUES (50, 'abc', 'def', 2, NULL, 0.0);
 INSERT INTO items (item_id, item_name, item_desc, item_cat, item_img, avg_rating) VALUES (3, 'you', 'Dystopian novel by George Orwell', 1, '', 0.0);
-select * from items;
+-- select * from items;
 
 INSERT INTO ratings (rating_id, item_id, site_name, rating_value, price, sales, url) VALUES (29, 15, 'Meesho', 3.5, 500.00, 1, NULL);
 INSERT INTO ratings (rating_id, item_id, site_name, rating_value, price, sales, url) VALUES (67, 37, 'Amazon', 4.4, 139.00, 19980, 'https://www.amazon.in/Secret-Garden-Frances-Hodgson-Burnett/dp/9386538997/ref=sr_1_1_sspa?crid=3GKCY4SJAYD1K&keywords=the+secret+garden&qid=1704381053&sprefix=the+secret+garde%2Caps%2C400&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1');
@@ -257,7 +263,8 @@ select * from mas_user;
 
  -- ====================================================
 DELIMITER $$
-CREATE PROCEDURE save_item_details(in_item_name varchar(50), in_item_desc varchar(500), in_item_cat int, site_name1 varchar(50), rating_value1 numeric, price1 numeric, sales1 int, url1 varchar(500), site_name2 varchar(50), rating_value2 numeric, price2 numeric, sales2 int, url2 varchar(500), imgpath varchar(100))
+CREATE PROCEDURE save_item_details(in_item_name varchar(50), in_item_desc varchar(500), in_item_cat int, site_name1 varchar(50), rating_value1 numeric, price1 numeric, sales1 int,
+ url1 varchar(500), site_name2 varchar(50), rating_value2 numeric, price2 numeric, sales2 int, url2 varchar(500), imgpath varchar(100))
 begin
 	DECLARE nxt_itemid integer;
 	DECLARE avgRating numeric(2, 1);
@@ -276,4 +283,34 @@ end $$
 DELIMITER $$
 
 
+/*
+select * from mas_user;
+select * from employee;
+select * from customers;
 
+select uname, upass, mu.uid, emp_name,access_lvl from mas_user mu inner join employee emp ON mu.uid=emp.uid where uname= 'shraddha' and upass='1234';
+
+*/
+-- Function: edit_item_details(integer, character varying, character varying, integer, character varying, numeric, numeric, integer, character varying, character varying, numeric, numeric, integer, character varying, character varying)
+
+-- DROP FUNCTION edit_item_details(integer, character varying, character varying, integer, character varying, numeric, numeric, integer, character varying, character varying, numeric, numeric, integer, character varying, character varying);
+
+DELIMITER $$
+CREATE PROCEDURE edit_item_details(in_item_id int, in_item_name varchar(50), in_item_desc varchar(500), in_item_cat int, site_name1 varchar(50), rating_value1 numeric, price1 numeric,
+ sales1 int, url1 varchar(500), site_name2 varchar(50), rating_value2 numeric, price2 numeric, sales2 int, url2 varchar(500), imgpath varchar(100))
+  
+BEGIN
+    DECLARE avgRating numeric(2, 1);
+
+     -- find the next item id
+     -- select coalesce(max(item_id), 0)+1 INTO nxt_itemid from items;
+     -- calculate average rating
+     SET avgRating = ((rating_value1 * sales1) + (rating_value2 * sales2))/(sales1 + sales2);
+
+     UPDATE items SET item_name = in_item_name, item_desc = in_item_desc,item_cat = in_item_cat, avg_rating = avgRating, tot_sales = (sales1 + sales2), item_img=imgpath  WHERE item_id = in_item_id;
+     DELETE from ratings WHERE item_id = in_item_id;
+     insert into ratings(item_id, site_name, rating_value, price, sales, url) values(in_item_id, site_name1, rating_value1,price1, sales1, url1);
+     insert into ratings(item_id, site_name, rating_value, price, sales, url) values(in_item_id, site_name2, rating_value2,price2, sales2, url2);
+
+end $$
+DELIMITER $$

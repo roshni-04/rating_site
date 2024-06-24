@@ -2,7 +2,7 @@
 
 $server = "localhost";
 $username = "root";
-$password = "Shivya04";
+$password = "*WhitE35";
 $db_name = "rating_db";
 
 ?>

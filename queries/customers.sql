@@ -12,63 +12,6 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
---
--- PostgreSQL database dump
---
-
--- Dumped from database version 9.3.3
--- Dumped by pg_dump version 9.3.3
--- Started on 2024-05-21 23:20:31
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SET check_function_bodies = false;
-SET client_min_messages = warning;
-
-SET search_path = public, pg_catalog;
-
---
--- TOC entry 1966 (class 0 OID 65885)
--- Dependencies: 181
--- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO customers (cus_uid, cus_name, email, ph_no, gender, bdate, address, uid) VALUES (2, 'dora d', 'd@email.com', '2222222', 'F ', '2022-02-01', 'w', 103);
-INSERT INTO customers (cus_uid, cus_name, email, ph_no, gender, bdate, address, uid) VALUES (3, 'ami s', 'a@email.com', '222222', 'F ', '2009-09-09', 'sdsd', 104);
-INSERT INTO customers (cus_uid, cus_name, email, ph_no, gender, bdate, address, uid) VALUES (4, 'Shawn M', 'a@email.com', '932882828', 'M ', '2023-12-06', 'hsh 2282                    ', 105);
-INSERT INTO customers (cus_uid, cus_name, email, ph_no, gender, bdate, address, uid) VALUES (5, 'rj d', 'r@email.com', '12232323', 'M ', '2024-01-17', 'fff', 107);
-INSERT INTO customers (cus_uid, cus_name, email, ph_no, gender, bdate, address, uid) VALUES (1, 'shraddha', 'sh@email.com', '76362637', 'F ', '2023-12-06', 'eee', 102);
-INSERT INTO customers (cus_uid, cus_name, email, ph_no, gender, bdate, address, uid) VALUES (6, 'pra d', 'p@email.com', '7474837', 'M ', '2024-01-08', '       fgfdgg             ', 108);
-
-
---
--- TOC entry 1972 (class 0 OID 0)
--- Dependencies: 180
--- Name: customers_cus_uid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('customers_cus_uid_seq', 6, true);
-
-
-SET default_tablespace = '';
-
---
--- TOC entry 1857 (class 2606 OID 65890)
--- Name: pkey_customers; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY customers
-    ADD CONSTRAINT pkey_customers PRIMARY KEY (cus_uid);
-
-
--- Completed on 2024-05-21 23:20:31
-
---
--- PostgreSQL database dump complete
---
-
 
 SET search_path = public, pg_catalog;
 

@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
     <link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="headers.css" rel="stylesheet">
+    <!-- <link href="headers.css" rel="stylesheet"> -->
 
     <!-- Add icon library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -119,7 +119,7 @@
     <?php include 'navbar.php' ?>
 
     <?php
-    include 'controllers/pg_connect.php';
+    $pdo = require_once 'pdo/PDOConnection.php';
 
     // Check if the search query is provided
     if (isset($_GET['query'])) {
@@ -128,14 +128,25 @@
         $pattern = '%' . $searchQuery . '%';
         // Perform a search in your database using the provided query
         // Modify the SQL query as per your database schema
-        $sql = "SELECT ratings.item_id, item_name, avg_rating, ARRAY_AGG (site_name || '~' || rating_value || '~' || price  || '~' || sales  || '~' || coalesce(url,'#')) rating_desc, item_desc, tot_sales 
+        /*$sql = "SELECT ratings.item_id, item_name, avg_rating, ARRAY_AGG (site_name || '~' || rating_value || '~' || price  || '~' || sales  || '~' || coalesce(url,'#')) rating_desc, item_desc, tot_sales 
          FROM items INNER JOIN ratings USING (item_id)
-        WHERE item_name ILIKE :pattern GROUP BY ratings.item_id, item_name, avg_rating, tot_sales, item_desc ORDER BY avg_rating DESC, tot_sales DESC LIMIT 10";
+        WHERE item_name ILIKE :pattern GROUP BY ratings.item_id, item_name, avg_rating, tot_sales, item_desc ORDER BY avg_rating DESC, tot_sales DESC LIMIT 10";*/
 
-        $statement = $pdo->prepare($sql);
-        $statement->execute([':pattern' => $pattern]);
 
-        $result = pg_query($pg_conn, $sql);  // fetchall() *****
+        $sql = "SELECT ratings.item_id, item_name, avg_rating, item_desc, tot_sales, item_img,
+    GROUP_CONCAT(CONCAT(site_name, '~', rating_value, '~', price, '~', sales, '~', IFNULL(url, '#')) SEPARATOR ',') AS rating_desc FROM items 
+INNER JOIN 
+    ratings
+USING (item_id) WHERE item_name LIKE :pattern GROUP BY ratings.item_id, item_name, avg_rating, tot_sales, item_desc, item_img 
+ORDER BY 
+    avg_rating DESC, tot_sales DESC 
+LIMIT 10;";
+
+
+        $stmnt = $pdo->prepare($sql);
+        $stmnt->execute([':pattern' => $pattern]);
+
+        $result = $stmnt->fetchall(PDO::FETCH_ASSOC); 
     } else {
         // Handle case where no search query is provided
         echo '<div class="container py-5">';
@@ -153,35 +164,39 @@
 
         <h2 class="pb-2 border-bottom text-dark text-light">Featured Items</h2>
     <div class="row row-cols-1 row-cols-md-2 g-4">
-        <?php while ($row = pg_fetch_object($result)) { ?>
+        <?php 
+        //while ($row = pg_fetch_object($result)) {
+            foreach ($result as $row){
+            
+            ?>
             <div class="col">
                 <div class="card">
                     <img src="res/images/thumbnail.png" class="card-img-top" alt="Thumbnail" height="250" >
                     <div class="card-body"> 
-                        <h5 class="card-title"><?php echo $row->item_name; ?></h5>
-                        <p class="card-text"><?php echo $row->item_desc; ?></p>
+                        <h5 class="card-title"><?php echo $row['item_name']; ?></h5>
+                        <p class="card-text"><?php echo $row['item_desc']; ?></p>
 
                         <!-- Displaying star rating -->
                         <div class="star-rating">
-                            Average rating : <?php echo $row->avg_rating; ?> &nbsp;
+                            Average rating : <?php echo $row['avg_rating']; ?> &nbsp;
                             <?php
                             // Full stars
-                            for ($i = 1; $i <= floor($row->avg_rating); $i++) {
+                            for ($i = 1; $i <= floor($row['avg_rating']); $i++) {
                                 echo '<span class="fa fa-star checked"></span>';
                             }
 
                             // Partial star
-                            if ($row->avg_rating - floor($row->avg_rating) > 0) {
+                            if ($row['avg_rating'] - floor($row['avg_rating']) > 0) {
                                 echo '<span class="fa fa-star-half checked"></span>';
                             }
                             ?>
                         </div>
 
                         <?php 
-                        $str = $row->rating_desc; 
-                        //"{Amazon~4.5~17500.00~2500~https://www.amazon.in/Motorola-G72-128GB-Meteorite-Grey/,Flipkart~4.3~18000.00~3000~https://www.flipkart.com/motorola-g72-meteorite-grey-128-gb/}";
-                        $str = ltrim($str, $str[0]);    // remove {
-                        $str = rtrim($str, "}");        // remove }
+                        $str = $row['rating_desc']; 
+                        //"Amazon~4.5~17500.00~2500~https://www.amazon.in/Motorola-G72-128GB-Meteorite-Grey/,Flipkart~4.3~18000.00~3000~https://www.flipkart.com/motorola-g72-meteorite-grey-128-gb/";
+                        // $str = ltrim($str, $str[0]);    // remove {
+                        // $str = rtrim($str, "}");        // remove }
                         $newStr = explode(",", $str);   // split based on ,
 
                         echo "<table class='table table-borderless'>
@@ -210,8 +225,8 @@
                         ?>
 
                     <?php if ($access_lvl == 1 ||$access_lvl == 2) { ?>
-                        <a href="itemedit.php?id=<?php echo $row->item_id; ?>"  class="btn btn-info">Edit</a>
-                        <button href="delete.php?id=<?php echo $row->item_id;?>" class="btn btn-danger">Delete</button>
+                        <a href="itemedit.php?id=<?php echo $row['item_id']; ?>"  class="btn btn-info">Edit</a>
+                        <button class="delete-item btn btn-danger" data-item-id="<?php echo $row['item_id']; ?>">Delete</button>
 
                     <?php } ?>
                     </div>

@@ -44,25 +44,6 @@ try{
     }
   }
 
-/*
-$avgRating = (($i_rate * $i_sales) + ($i_rate2 * $i_sales2))/($i_sales + $i_sales2);
-
-$sql="insert into items(item_id,item_name,item_desc,item_cat, avg_rating) values((select max(item_id)+1 from items),$1, $2,$3, $4)";
-$pstmt=pg_prepare($pg_conn,"prep",$sql);
-$r=pg_execute($pg_conn,"prep",array($i_name,$i_desc,$i_cat, $avgRating));
-
-$sql="insert into ratings(item_id,site_name,rating_value,price,sales,url) values((select max(item_id) from items),$1, $2,$3,$4,$5)";
-$pstmt=pg_prepare($pg_conn,"prep1",$sql);
-$r=pg_execute($pg_conn,"prep1",array($i_site,$i_rate,$i_price,$i_sales,$i_url));
-
-$sql="insert into ratings(item_id,site_name,rating_value,price,sales,url) values((select max(item_id) from items),$1, $2,$3,$4,$5)";
-$pstmt=pg_prepare($pg_conn,"prep2",$sql);
-$r=pg_execute($pg_conn,"prep2",array($i_site2,$i_rate2,$i_price2,$i_sales2,$i_url2));
-*/
-
-//-------------- works fine but rasises exception for special symbols----------------------
-// $sql = "select save_item_details('".$i_name."', '".$i_desc."', ".$i_cat.", '".$i_site1."', ".$i_rate1.", ".$i_price1.", ".$i_sales1.", '".$i_url1."', '".$i_site2."', ".$i_rate2.", ".$i_price2.", ".$i_sales2.", '".$i_url2."','".$img_path."')";
-// $result = pg_query($pg_conn, $sql);
 
 
 # * * * * * pg_query_params() -> safely escapes the harmful special symbols * * * * *
@@ -76,7 +57,7 @@ $r=pg_execute($pg_conn,"prep2",array($i_site2,$i_rate2,$i_price2,$i_sales2,$i_ur
       $pdo->beginTransaction();
 
       $sql = "CALL save_item_details(:item_name, :item_desc, :item_cat, :site_name1, :rating_value1, :price1, :sales1, :url1,
-      :site_name2, :rating_value2, :price2, :sales2, :url2, :imgpath)";
+                    :site_name2, :rating_value2, :price2, :sales2, :url2, :imgpath)";
 
         $statement = $pdo->prepare($sql);
 
@@ -101,9 +82,6 @@ $r=pg_execute($pg_conn,"prep2",array($i_site2,$i_rate2,$i_price2,$i_sales2,$i_ur
 
           $pdo->commit();
         }
-
-
-
 // if($result){ //save successful;
 //     $s = 1;
 // }
@@ -112,8 +90,7 @@ $r=pg_execute($pg_conn,"prep2",array($i_site2,$i_rate2,$i_price2,$i_sales2,$i_ur
   $s=0;
   echo $e->getMessage();
   $pdo->rollback();
-}
-finally{
+} finally{
   $pdo->setAttribute(PDO::ATTR_AUTOCOMMIT,1); // setting auto-commit ON => 1
   $pdo = NULL;
 }

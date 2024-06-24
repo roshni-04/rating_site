@@ -215,6 +215,11 @@
           var matchFound = 0;
           
           function validateForm() {
+                if(document.getElementById("role").value == "0"){
+                    alert("Please select a user role");
+                    document.getElementById("role").focus();
+                    return false;
+                }
               var user = document.forms["myform"]["usrname"].value;
               var pass = document.forms["myform"]["usrpass"].value;
               var role = document.getElementById("role").value;

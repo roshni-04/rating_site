@@ -1,5 +1,7 @@
 <?php
-include 'controllers/pg_connect.php';
+
+$row = NULL;
+        $pdo = NULL;
 
 //session_start(); //to get the user from session -> prevent CSRF
 /*
@@ -29,22 +31,37 @@ if(isset($_SESSION['user_name'])){
         $conf_pass = $_POST['txtCPass'];
         //$user_id = (int)$_SESSION["pg_active_uid"]; //$_POST['hdnUid'];
 
-        //$pg_conn = connnect_to_server();
+        $pdo = require_once 'pdo/PDOConnection.php';
 
-        $sql = "SELECT upass from mas_user where uid = ".$user_id;
+        $sql = "SELECT upass from mas_user where uid = :uid";
+        //$statement = $pdo->prepare($sql);
+        //$statement->bindParam(':uid', $user_id, PDO::PARAM_STR);
+
+        $st = $pdo->prepare($sql);
+        $st->bindParam(':uid', $user_id, PDO::PARAM_INT);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC); 
         //...execute query
         
+        /*
         $result = pg_query($pg_conn, $sql);  //execute query
-        
-        $row = pg_fetch_object($result);  
-        $usrpass = $row->upass;
+        $row = pg_fetch_object($result);  */
+
+        $usrpass = $row['upass'];
 
             if($usrpass == $old_pass){
                 // update password if old password matches
 
-                $sql = "UPDATE mas_user SET upass = $1 where uid=$2 and upass=$3";
+                $sql = "UPDATE mas_user SET upass = :upass where uid= :uid";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':upass', $new_pass, PDO::PARAM_STR);
+                $stmt->bindParam(':uid', $user_id, PDO::PARAM_INT);
+                if($stmt->execute()){
+                    $status = 1;
+                }
     
-                $pstmt = pg_prepare($pg_conn, "pass_qry", $sql);
+                /*$pstmt = pg_prepare($pg_conn, "pass_qry", $sql);
 
                 $result = pg_execute($pg_conn, "pass_qry", array($new_pass, $user_id, $old_pass));
 
@@ -53,7 +70,7 @@ if(isset($_SESSION['user_name'])){
                 if($rows != 0){
                     $status = 1;
                 }
-
+                */
 
             } else { // password mismatch
                 $status = 0;
@@ -65,6 +82,9 @@ if(isset($_SESSION['user_name'])){
         //savelogdata("[at]:" . pathinfo($e->getFile())['basename'] . " =>> " . $e->getMessage());
 
     } finally {
+        $row = NULL;
+        $pdo = NULL;
+        /*
         if($result != NULL){
             // savelogdata('Closing result.');
             pg_free_result($result); //FREE the resultset
@@ -73,7 +93,7 @@ if(isset($_SESSION['user_name'])){
         if($pg_conn != NULL){
             // savelogdata('Closing connection.');
             pg_close($pg_conn);
-        }
+        }*/
     }
     
 //    $linkTarget = ($access_lvl == 2) ? 'emp_index.php' : 'cust_index.php';

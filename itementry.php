@@ -1,5 +1,5 @@
 <?php
-  require 'controllers/pg_connect.php';
+  // require 'controllers/pg_connect.php';
 ?>
 <html>
   <head>
@@ -31,22 +31,34 @@
     ?>
 
       <?php
+
+        $pdo = require_once 'pdo/PDOConnection.php';
         // ------ find the category dropdown -------------
         $sql = "SELECT * FROM mas_category order by cat_name";
-        $result =  pg_query($pg_conn, $sql);
+
+        $stmnt = $pdo->query($sql);         // for select all
+
+        $result = $stmnt->fetchall(PDO::FETCH_ASSOC); // returns an array of rows
+
+        /*$result =  pg_query($pg_conn, $sql);*/
         
         $slist = "";
-        
+
+        foreach ($result as $row){
+          $slist = $slist."<option value=" . $row['cat_id'] .">" . $row['cat_name'] . "</option>";
+        }
+        /*
         while( $row = pg_fetch_object($result) ){ // the loop continues untill the data pointer reaches NULL
             $slist = $slist."<option value=".$row->cat_id.">".$row->cat_name."</option>";
-        } 
+        } */
 
         if($result  != NULL){
-          pg_free_result($result);// free the result set
+          $result = NULL;
+          //pg_free_result($result);// free the result set
        }
-       if($pg_conn  != NULL){
-         pg_close($pg_conn);//closing the connection 
-       }
+       //close connection
+       $pdo = NULL;
+       
       ?>
 
     <div class="container">

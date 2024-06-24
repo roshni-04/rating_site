@@ -1,6 +1,5 @@
 <?php
-
-$pdo=require_once 'pdo/PDOConnection.php';
+$pdo = require_once 'pdo/PDOConnection.php';
 
 $uname     =$_POST['usrname'];
 //echo $s_name;
@@ -9,77 +8,102 @@ $urole     =$_POST['role'];
 
 if($urole==2)//employee login
 {
-$sql="select uname, upass, mu.uid, emp_name,access_lvl from mas_user mu inner join employee emp ON mu.uid=emp.uid where uname = :uname and upass= :upass";
-$stmt = $pdo->prepare($sql);
-$stmt->bindParam(':uname', $uname, PDO::PARAM_STR);
-$stmt->bindParam(':upass', $upass, PDO::PARAM_STR);
-$stmt->execute();
-$row_cnt = $stmt->rowCount();
+   try{
+      $sql="select uname, upass, mu.uid, emp_name,access_lvl from mas_user mu inner join employee emp  ON mu.uid=emp.uid where uname= :username and upass=:password";
+      $statement = $pdo->prepare($sql);
 
-$status = 0; //failed
-if($row_cnt == 1){ //succes
-   $status = 1;
+      $statement->bindParam(':username', $uname, PDO::PARAM_STR);
+      $statement->bindParam(':password', $upass, PDO::PARAM_STR); 
 
-   $row = $stmt->fetch(PDO::FETCH_OBJ);  // reads the record pointer by the data pointer
+      $statement->execute();
 
-   // set session data
-   session_start(); // create a new session if there is no existing session
-   $_SESSION["user_name"] = $uname;
-   $_SESSION['user_id'] = $row->uid;
-   $_SESSION["acc_lvl"] = $row->access_lvl;
+      $result = $statement->fetch(PDO::FETCH_ASSOC); // returns an array of rows
 
-} else { //fail
-   //echo "fail";
+
+      $status = 0; //failed
+
+      if($result){
+         //succes
+         $status = 1;
+
+         //$row = pg_fetch_object($result); // reads the record pointer by the data pointer
+         $row = $result;
+
+         // set session data
+         session_start(); // create a new session if there is no existing session
+         $_SESSION["user_name"] = $uname;
+         $_SESSION['user_id'] = $row['uid'];
+         $_SESSION["acc_lvl"] = $row['access_lvl'];
+
+      } else { //fail
+         echo "fail";
+      }
+
+   } catch(Exception $e){
+      //echo($e->getMessage());
+   } finally {
+
+      $pdo = NULL;
+   }
+
+      if ($status == 0) {
+         // User not found, display an alert
+         echo '<script>alert("User not found. Please sign up"); window.location.href = "emp_register.php";</script>';
+      } else {
+         // Successful login
+         header("location: index.php");
+      }
 }
 
-
-$stmt = null;
-
-if ($status == 0) {
-    // User not found, display an alert
-    echo '<script>alert("User not found. Please sign up"); window.location.href = "emp_register.php";</script>';
-} else {
-    // Successful login
-    header("location: index.php");
-}
-}
 else if($urole==3)//customer login
 {
-$sql="select uname, upass, mu.uid, cus_name,access_lvl from mas_user mu inner join customers cus ON mu.uid=cus.uid where uname = :uname and upass= :upass";
-$stmt = $pdo->prepare($sql);
-$stmt->bindParam(':uname', $uname, PDO::PARAM_STR);
-$stmt->bindParam(':upass', $upass, PDO::PARAM_STR);
-$stmt->execute();
+   try {
+      $sql="select uname, upass, mu.uid, cus_name,access_lvl from mas_user mu inner join customers cus ON 
+      mu.uid=cus.uid where uname= :username and upass=:password";
+      $statement = $pdo->prepare($sql);
 
-$row_cnt = $stmt->rowCount();
+      $statement->bindParam(':username', $uname, PDO::PARAM_STR);
+      $statement->bindParam(':password', $upass, PDO::PARAM_STR); 
 
-$status = 0; //failed
-if($row_cnt == 1){ //succes
-   $status = 1;
+      $statement->execute();
 
-   $row = $stmt->fetch(PDO::FETCH_OBJ); // reads the record pointer by the data pointer
+      $result = $statement->fetch(PDO::FETCH_ASSOC); // returns an array of rows
 
-   // set session data
-   session_start(); // create a new session if there is no existing session
-   $_SESSION["user_name"] = $uname;
-   $_SESSION['user_id'] = $row->uid;
-   $_SESSION["acc_lvl"] = $row->access_lvl;
 
-} else { //fail
-   //echo "fail";
+      $status = 0; //failed
+      if($result){
+         //succes
+         $status = 1;
+
+         //$row = pg_fetch_object($result); // reads the record pointer by the data pointer
+         $row = $result;
+
+         // set session data
+         session_start(); // create a new session if there is no existing session
+         $_SESSION["user_name"] = $uname;
+         $_SESSION['user_id'] = $row['uid'];
+         $_SESSION["acc_lvl"] = $row['access_lvl'];
+
+      } else { //fail
+         //echo "fail";
+      }
+
+   } catch(Exception $e){
+      //echo($e->getMessage());
+   } finally {
+
+      $pdo = NULL;
+   }
+
+      if ($status == 0) {
+         // User not found, display an alert
+         echo '<script>alert("User not found. Please sign up"); window.location.href = "register.php";</script>';
+      } else {
+         // Successful login
+         header("location: index.php");
+      }
 }
 
-
-$stmt = null;
-
-if ($status == 0) {
-    // User not found, display an alert
-    echo '<script>alert("User not found. Please sign up"); window.location.href = "register.php";</script>';
-} else {
-    // Successful login
-    header("location: index.php");
-}
-}
 
 
 ?>
